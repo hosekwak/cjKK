@@ -1,0 +1,20 @@
+---
+- name: 배포판 별로 웹서버 설치
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    include_t: "{{ 'amazon' if ansible_distribution == 'Amazon' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'default' }}"
+
+  tasks:
+    - name: "{{ include_t }} 에서의 작업"
+      include_tasks: "{{ include_t }}.yml"
+
+    - name: Print IP addresses
+      debug:
+        msg:
+          - "NodeName: {{ ansible_nodename }}"
+          - "{{ item }}: {{ hostvars[inventory_hostname]['ansible_' + item]['ipv4']['address'] | default('N/A') }}"
+      loop: "{{ ansible_interfaces }}"
+      when: "hostvars[inventory_hostname]['ansible_' + item] is defined and 'ipv4' in hostvars[inventory_hostname]['ansible_' + item]"
+
